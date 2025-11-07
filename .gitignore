@@ -1,0 +1,64 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Dependencies
+node_modules/
+
+# Build output
+/dist/
+/build/
+/.vite/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Local env files
+.env
+.env.local
+.env.*.local
+
+# Cache
+.cache/
+/.parcel-cache
+/.eslintcache
+/.stylelintcache
+/.tsbuildinfo
+
+# Coverage
+coverage/
+
+# Misc
+.DS_Store
+Thumbs.db
+
+# Vite specific
+vite.config.ts.timestamp-*
+
+# Yarn Berry
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+
+# Lockfiles
+package-lock.json
+# If you prefer to commit lockfile, remove the above line

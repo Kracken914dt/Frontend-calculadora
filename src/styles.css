@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root { height: 100%; }
+  body { @apply bg-white text-neutral-900 antialiased; }
+  .dark body { @apply bg-black text-white; }
+}
+
+@layer components {
+  .btn {
+    @apply select-none active:scale-95 transition-transform grid place-items-center rounded-full text-xl h-14 w-14 text-neutral-900 dark:text-white;
+  }
+  .btn-op {
+    @apply text-orange-400;
+  }
+  .btn-eq {
+    @apply bg-orange-500 text-white h-16 w-16 shadow-lg shadow-orange-500/30;
+  }
+  .btn-ghost {
+    @apply text-neutral-600 dark:text-neutral-300/70;
+  }
+}
