@@ -1,55 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { getState, doOperation, getHistory, undo, redo, clearCalc } from './api'
-
-function tokenize(expr) {
-  const tokens = []
-  let num = ''
-  for (let i = 0; i < expr.length; i++) {
-    const ch = expr[i]
-    if ((ch >= '0' && ch <= '9') || ch === '.') {
-      num += ch
-    } else if ('+-*/%'.includes(ch)) {
-      if (num) { tokens.push(parseFloat(num)); num = '' }
-      tokens.push(ch)
-    }
-  }
-  if (num) tokens.push(parseFloat(num))
-  return tokens
-}
-
-function toRPN(tokens) {
-  const out = []
-  const stack = []
-  const prec = { '+': 1, '-': 1, '*': 2, '/': 2, '%': 3 }
-  for (const t of tokens) {
-    if (typeof t === 'number') out.push(t)
-    else {
-      while (stack.length && prec[stack[stack.length - 1]] >= prec[t]) out.push(stack.pop())
-      stack.push(t)
-    }
-  }
-  while (stack.length) out.push(stack.pop())
-  return out
-}
-
-function evalRPN(rpn) {
-  const st = []
-  for (const t of rpn) {
-    if (typeof t === 'number') st.push(t)
-    else {
-      const b = st.pop() ?? 0
-      const a = st.pop() ?? 0
-      let v = 0
-      if (t === '+') v = a + b
-      else if (t === '-') v = a - b
-      else if (t === '*') v = a * b
-      else if (t === '/') v = b === 0 ? NaN : a / b
-      else if (t === '%') v = a % b
-      st.push(v)
-    }
-  }
-  return st.pop() ?? 0
-}
+import { useEffect, useState } from 'react'
+import { getState, getHistory, undo, redo, clearCalc, evaluate } from './api'
 
 export default function App() {
   const [theme, setTheme] = useState('light')
@@ -63,11 +13,11 @@ export default function App() {
   const [history, setHistory] = useState([])
   const [historyInfo, setHistoryInfo] = useState(null)
 
-  // keyboard input
+  // keyboard input (build expression and evaluate with Enter/=)
   useEffect(() => {
     function onKey(e) {
       const k = e.key
-      if ((k >= '0' && k <= '9') || k === '.') {
+      if ((k >= '0' && k <= '9') || k === '.' || k === '(' || k === ')') {
         e.preventDefault()
         setBuffer(prev => {
           if (k === '.') {
@@ -78,17 +28,20 @@ export default function App() {
         })
         return
       }
-      const map = { '+': 'sumar', '-': 'restar', '*': 'multiplicar', '/': 'dividir' }
-      if (map[k]) {
+      if ('+-*/'.includes(k)) {
         e.preventDefault()
-        submitOperation(map[k])
+        setBuffer(prev => {
+          if (!prev) return ''
+          if ('+-*/'.includes(prev.slice(-1))) return prev.slice(0, -1) + k
+          return prev + k
+        })
         return
       }
       if (k === 'Backspace') {
         e.preventDefault(); setBuffer(prev => prev.slice(0, -1)); return
       }
       if (k === 'Escape') { e.preventDefault(); clearAll(); return }
-      if (k === 'Enter' || k === '=') { e.preventDefault(); /* step-by-step mode: no-op */ return }
+      if (k === 'Enter' || k === '=') { e.preventDefault(); handleEvaluate(); return }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -179,6 +132,9 @@ export default function App() {
         setCanUndo(Boolean(d.canUndo))
         setCanRedo(Boolean(d.canRedo))
       }
+      // After jumping, fetch state to preload the expression so the user can edit it
+      const s = await getState()
+      setBuffer(s.data.lastOperation || '')
       await refreshHistory()
     } catch (e) {
       setError(e.message)
@@ -187,13 +143,15 @@ export default function App() {
     }
   }
 
-  async function submitOperation(op) {
-    const val = Number(buffer)
-    if (!Number.isFinite(val)) return
+  
+
+  async function handleEvaluate() {
+    const expr = buffer.trim()
+    if (!expr) return
     setLoading(true)
     setError('')
     try {
-      const r = await doOperation(op, val)
+      const r = await evaluate(expr)
       const d = r.data
       setCurrentValue(d.result)
       setLastOperation(d.operation)
@@ -218,6 +176,7 @@ export default function App() {
       setLastOperation(d.lastOperation)
       setCanUndo(Boolean(d.canUndo))
       setCanRedo(Boolean(d.canRedo))
+      setBuffer(d.lastOperation || '')
       refreshHistory()
     } catch (e) {
       setError(e.message)
@@ -236,6 +195,7 @@ export default function App() {
       setLastOperation(d.lastOperation)
       setCanUndo(Boolean(d.canUndo))
       setCanRedo(Boolean(d.canRedo))
+      setBuffer(d.lastOperation || '')
       refreshHistory()
     } catch (e) {
       setError(e.message)
@@ -264,36 +224,36 @@ export default function App() {
         <div className="w-full max-w-sm">
           <div className="flex items-end justify-end p-6">
             <div className="text-right">
-              <div className="text-5xl text-neutral-900 dark:text-neutral-200 tracking-wide min-h-[3rem]">{buffer || currentValue}</div>
-              <div className="text-xs text-neutral-500 mt-1">{lastOperation}</div>
+              <div className="text-5xl text-neutral-900 dark:text-neutral-200 tracking-wide min-h-[3rem]">{buffer || lastOperation || currentValue}</div>
+              <div className="text-neutral-500 mt-2">= {currentValue}</div>
             </div>
           </div>
 
           <div className="p-6 grid grid-cols-4 gap-4 place-items-center">
             <button className="btn btn-ghost" disabled={loading} onClick={clearAll}>C</button>
             <button className="btn btn-ghost" disabled={loading} onClick={backspace}>⌫</button>
-            <button className="btn btn-op" disabled>%</button>
-            <button className="btn btn-op" disabled={loading} onClick={() => submitOperation('dividir')}>÷</button>
+            <button className="btn btn-op" onClick={() => append('(')}>(</button>
+            <button className="btn btn-op" disabled={loading} onClick={() => append('/')}>÷</button>
 
             <button className="btn" onClick={() => append('7')}>7</button>
             <button className="btn" onClick={() => append('8')}>8</button>
             <button className="btn" onClick={() => append('9')}>9</button>
-            <button className="btn btn-op" onClick={() => submitOperation('multiplicar')}>×</button>
+            <button className="btn btn-op" onClick={() => append('*')}>×</button>
 
             <button className="btn" onClick={() => append('4')}>4</button>
             <button className="btn" onClick={() => append('5')}>5</button>
             <button className="btn" onClick={() => append('6')}>6</button>
-            <button className="btn btn-op" onClick={() => submitOperation('restar')}>−</button>
+            <button className="btn btn-op" onClick={() => append('-')}>−</button>
 
             <button className="btn" onClick={() => append('1')}>1</button>
             <button className="btn" onClick={() => append('2')}>2</button>
             <button className="btn" onClick={() => append('3')}>3</button>
-            <button className="btn btn-op" onClick={() => submitOperation('sumar')}>+</button>
+            <button className="btn btn-op" onClick={() => append('+')}>+</button>
 
             <button className="btn" onClick={() => append('0')}>0</button>
             <button className="btn" onClick={() => append('.')}>.</button>
-            <button className="btn btn-ghost" disabled={loading || !canUndo} onClick={handleUndo}>↶</button>
-            <button className="btn btn-eq" disabled> = </button>
+            <button className="btn" onClick={() => append(')')}>)</button>
+            <button className="btn btn-eq" disabled={loading || !buffer} onClick={handleEvaluate}>=</button>
           </div>
         </div>
 

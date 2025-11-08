@@ -17,13 +17,6 @@ export async function getState() {
   return request('/state', { method: 'GET' })
 }
 
-export async function doOperation(operation, value) {
-  return request('/operation', {
-    method: 'POST',
-    body: JSON.stringify({ operation, value })
-  })
-}
-
 export async function getHistory() {
   return request('/history', { method: 'GET' })
 }
@@ -38,4 +31,11 @@ export async function redo() {
 
 export async function clearCalc() {
   return request('/clear', { method: 'POST' })
+}
+
+export async function evaluate(expression) {
+  return request('/evaluate', {
+    method: 'POST',
+    body: JSON.stringify({ expression })
+  })
 }
