@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getState, getHistory, undo, redo, clearCalc, evaluate } from './api'
+import { StepForward, StepBack, Moon, Sun } from "lucide-react"
 
 export default function App() {
   const [theme, setTheme] = useState('light')
@@ -78,7 +79,7 @@ export default function App() {
       const h = await getHistory()
       setHistory(h.data.history || [])
       setHistoryInfo(h.data.info || null)
-    } catch {}
+    } catch { }
   }
 
   function append(ch) {
@@ -143,7 +144,7 @@ export default function App() {
     }
   }
 
-  
+
 
   async function handleEvaluate() {
     const expr = buffer.trim()
@@ -213,58 +214,108 @@ export default function App() {
     <div className="min-h-screen w-full flex flex-col items-center p-4">
       <div className="w-full max-w-5xl flex justify-end mb-2">
         <button
-          className="px-3 py-1 rounded bg-black/5 dark:bg-white/10 text-sm"
+          className="flex items-center gap-2 px-3 py-1 rounded bg-black/5 dark:bg-white/10 text-sm hover:bg-black/10 dark:hover:bg-white/20 transition"
           onClick={() => setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))}
         >
-          {theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+          {theme === 'dark' ? (
+            <>
+              <Sun size={16} />
+              <span>Modo claro</span>
+            </>
+          ) : (
+            <>
+              <Moon size={16} />
+              <span>Modo oscuro</span>
+            </>
+          )}
         </button>
       </div>
       <div className="w-full max-w-5xl grid md:grid-cols-2 gap-6">
         {/* Calculadora */}
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-sm bg-neutral-900 dark:bg-neutral-950 rounded-3xl shadow-lg p-4">
           <div className="flex items-end justify-end p-6">
-            <div className="text-right">
-              <div className="text-5xl text-neutral-900 dark:text-neutral-200 tracking-wide min-h-[3rem]">{buffer || lastOperation || currentValue}</div>
-              <div className="text-neutral-500 mt-2">= {currentValue}</div>
+            <div className="w-full rounded-2xl p-4 text-right shadow-inner border border-neutral-500/30 bg-gradient-to-b from-neutral-300 to-neutral-200 dark:from-neutral-800 dark:to-neutral-900">
+              <div className="text-5xl text-neutral-900 dark:text-neutral-100 tracking-wide break-words min-h-[3rem]">
+                {buffer || lastOperation || currentValue}
+              </div>
+              <div className="text-neutral-600 dark:text-neutral-400 mt-2 text-lg">
+                = {currentValue}
+              </div>
             </div>
           </div>
 
-          <div className="p-6 grid grid-cols-4 gap-4 place-items-center">
-            <button className="btn btn-ghost" disabled={loading} onClick={clearAll}>C</button>
-            <button className="btn btn-ghost" disabled={loading} onClick={backspace}>⌫</button>
-            <button className="btn btn-op" onClick={() => append('(')}>(</button>
-            <button className="btn btn-op" disabled={loading} onClick={() => append('/')}>÷</button>
 
-            <button className="btn" onClick={() => append('7')}>7</button>
-            <button className="btn" onClick={() => append('8')}>8</button>
-            <button className="btn" onClick={() => append('9')}>9</button>
-            <button className="btn btn-op" onClick={() => append('*')}>×</button>
 
-            <button className="btn" onClick={() => append('4')}>4</button>
-            <button className="btn" onClick={() => append('5')}>5</button>
-            <button className="btn" onClick={() => append('6')}>6</button>
-            <button className="btn btn-op" onClick={() => append('-')}>−</button>
+          <div className="p-6 grid grid-cols-4 gap-3 place-items-center">
+            <button className="w-16 h-16 border border-neutral-600 rounded-2xl bg-neutral-800 text-white text-xl hover:bg-neutral-700 active:scale-95 transition" onClick={clearAll}>C</button>
+            <button className="w-16 h-16 border border-neutral-600 rounded-2xl bg-neutral-800 text-white text-xl hover:bg-neutral-700 active:scale-95 transition" onClick={backspace}>⌫</button>
+            <button className="w-16 h-16 border border-neutral-600 rounded-2xl bg-neutral-700 text-orange-400 text-xl hover:bg-neutral-600 active:scale-95 transition" onClick={() => append(')')}>)</button>
+            <button className="w-16 h-16 border border-neutral-600 rounded-2xl bg-neutral-700 text-orange-400 text-xl hover:bg-neutral-600 active:scale-95 transition" onClick={() => append('/')}>÷</button>
 
-            <button className="btn" onClick={() => append('1')}>1</button>
-            <button className="btn" onClick={() => append('2')}>2</button>
-            <button className="btn" onClick={() => append('3')}>3</button>
-            <button className="btn btn-op" onClick={() => append('+')}>+</button>
+            <button className="w-16 h-16 border border-neutral-600 rounded-2xl bg-neutral-800 text-white text-xl hover:bg-neutral-700 active:scale-95 transition" onClick={() => append('7')}>7</button>
+            <button className="w-16 h-16 border border-neutral-600 rounded-2xl bg-neutral-800 text-white text-xl hover:bg-neutral-700 active:scale-95 transition" onClick={() => append('8')}>8</button>
+            <button className="w-16 h-16 border border-neutral-600 rounded-2xl bg-neutral-800 text-white text-xl hover:bg-neutral-700 active:scale-95 transition" onClick={() => append('9')}>9</button>
+            <button className="w-16 h-16 border border-neutral-600 rounded-2xl bg-neutral-700 text-orange-400 text-xl hover:bg-neutral-600 active:scale-95 transition" onClick={() => append('*')}>×</button>
 
-            <button className="btn" onClick={() => append('0')}>0</button>
-            <button className="btn" onClick={() => append('.')}>.</button>
-            <button className="btn" onClick={() => append(')')}>)</button>
-            <button className="btn btn-eq" disabled={loading || !buffer} onClick={handleEvaluate}>=</button>
+            <button className="w-16 h-16 border border-neutral-600 rounded-2xl bg-neutral-800 text-white text-xl hover:bg-neutral-700 active:scale-95 transition" onClick={() => append('4')}>4</button>
+            <button className="w-16 h-16 border border-neutral-600 rounded-2xl bg-neutral-800 text-white text-xl hover:bg-neutral-700 active:scale-95 transition" onClick={() => append('5')}>5</button>
+            <button className="w-16 h-16 border border-neutral-600 rounded-2xl bg-neutral-800 text-white text-xl hover:bg-neutral-700 active:scale-95 transition" onClick={() => append('6')}>6</button>
+            <button className="w-16 h-16 border border-neutral-600 rounded-2xl bg-neutral-700 text-orange-400 text-xl hover:bg-neutral-600 active:scale-95 transition" onClick={() => append('-')}>−</button>
+
+            <button className="w-16 h-16 border border-neutral-600 rounded-2xl bg-neutral-800 text-white text-xl hover:bg-neutral-700 active:scale-95 transition" onClick={() => append('1')}>1</button>
+            <button className="w-16 h-16 border border-neutral-600 rounded-2xl bg-neutral-800 text-white text-xl hover:bg-neutral-700 active:scale-95 transition" onClick={() => append('2')}>2</button>
+            <button className="w-16 h-16 border border-neutral-600 rounded-2xl bg-neutral-800 text-white text-xl hover:bg-neutral-700 active:scale-95 transition" onClick={() => append('3')}>3</button>
+            <button className="w-16 h-16 border border-neutral-600 rounded-2xl bg-neutral-700 text-orange-400 text-xl hover:bg-neutral-600 active:scale-95 transition" onClick={() => append('+')}>+</button>
+
+            <button className="w-16 h-16 border border-neutral-600 rounded-2xl bg-neutral-800 text-white text-xl hover:bg-neutral-700 active:scale-95 transition" onClick={() => append('0')}>0</button>
+            <button className="w-16 h-16 border border-neutral-600 rounded-2xl bg-neutral-800 text-white text-xl hover:bg-neutral-700 active:scale-95 transition" onClick={() => append('.')}>.</button>
+
+            <button className="w-16 h-16 border border-neutral-600 rounded-2xl bg-neutral-700 text-orange-400 text-xl hover:bg-neutral-600 active:scale-95 transition" onClick={() => append('(')}>(</button>
+            <button className="w-16 h-16 border border-orange-500 rounded-2xl bg-orange-600 text-white text-2xl font-bold hover:bg-orange-500 active:scale-95 transition" onClick={handleEvaluate}>=</button>
+            <button
+              className="w-16 h-16 flex items-center justify-center border border-neutral-600 rounded-2xl bg-neutral-800 text-white text-xl hover:bg-neutral-700 active:scale-95 transition"
+              disabled={loading || !canUndo}
+              onClick={handleUndo}
+            >
+              <StepBack size={29} />
+            </button>
+            <button
+              className="w-16 h-16 flex items-center justify-center border border-neutral-600 rounded-2xl bg-neutral-800 text-white text-xl hover:bg-neutral-700 active:scale-95 transition"
+              disabled={loading || !canRedo}
+              onClick={handleRedo}
+            >
+              <StepForward size={29} />
+            </button>
+
+
+
           </div>
         </div>
+
 
         {/* Historial */}
         <div className="px-4">
           <div className="text-sm text-neutral-400 flex items-center justify-between mb-2">
             <div>Historial</div>
-            <div className="flex gap-2">
-              <button className="px-3 py-1 rounded bg-white/5" disabled={loading || !canUndo} onClick={handleUndo}>Deshacer</button>
-              <button className="px-3 py-1 rounded bg-white/5" disabled={loading || !canRedo} onClick={handleRedo}>Rehacer</button>
-            </div>
+            {/* <div className="flex gap-2">
+              <button
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 text-neutral-200 hover:bg-white/10 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={loading || !canUndo}
+                onClick={handleUndo}
+              >
+                <StepBack size={18} />
+                <span>Deshacer</span>
+              </button>
+
+              <button
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 text-neutral-200 hover:bg-white/10 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={loading || !canRedo}
+                onClick={handleRedo}
+              >
+                <span>Rehacer</span>
+                <StepForward size={18} />
+              </button>
+            </div> */}
           </div>
           <div className="text-xs text-neutral-500 mb-2">
             <div>Total: {historyInfo?.totalStates ?? '-'}</div>
